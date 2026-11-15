@@ -62,6 +62,8 @@ public partial class TestSceneBmsSessionMemory : OsuGameTestScene
         Task import = null!;
         MemorySongSelect selector = null!;
         BeatmapInfo[] maps = null!;
+        var allowInactive = Environment.GetEnvironmentVariable("BMS_SESSION_MEMORY_ALLOW_INACTIVE") == "1";
+        var activeWindowRequired = typeof(PlayerLoader).GetProperty("WindowShouldBeActiveForGameplayStart", BindingFlags.Instance | BindingFlags.NonPublic)!;
         PlayerLoader? loader = null;
         Player? player = null;
         MasterGameplayClockContainer? clock = null;
@@ -85,7 +87,7 @@ public partial class TestSceneBmsSessionMemory : OsuGameTestScene
             maps = corpus.Select(chart => bms.Single(map => string.Equals(map.Hash, chart.Hash, StringComparison.OrdinalIgnoreCase))).ToArray();
             Game.Ruleset.Value = maps[0].Ruleset;
             Game.Audio.Volume.Value = 0;
-            report!.WriteLine(JsonSerializer.Serialize(new { Renderer = host.Renderer.GetType().Name, Backend = host.ResolvedRenderer.ToString(), ProcessId = Environment.ProcessId, Protocol = "accelerated-early-exit" }));
+            report!.WriteLine(JsonSerializer.Serialize(new { Renderer = host.Renderer.GetType().Name, Backend = host.ResolvedRenderer.ToString(), ProcessId = Environment.ProcessId, AllowInactive = allowInactive, Protocol = "accelerated-early-exit" }));
         });
         PushAndConfirm(() => selector = new MemorySongSelect());
 
@@ -103,12 +105,18 @@ public partial class TestSceneBmsSessionMemory : OsuGameTestScene
             AddStep($"{id}: start song", () =>
             {
                 // The production loader requires an active window. A diagnostic runs unattended.
-                if (!host.IsActive.Value && host.Window is { } window)
+                if (!allowInactive && !host.IsActive.Value && host.Window is { } window)
                     host.InputThread.Scheduler.Add(() => window.Raise());
                 selector.StartSelected();
             });
             AddUntilStep($"{id}: enter loader", () => (loader = Game.ScreenStack.CurrentScreen as PlayerLoader) != null);
-            AddStep($"{id}: sample while loading", () => record(cycle, id, "loading"));
+            AddStep($"{id}: sample while loading", () =>
+            {
+                // The loader otherwise waits for focus even if rendering and replay can run in the background.
+                if (allowInactive)
+                    activeWindowRequired.SetValue(loader, false);
+                record(cycle, id, "loading");
+            });
             AddUntilStep($"{id}: enter player", () => (player = Game.ScreenStack.CurrentScreen as Player) is { IsLoaded: true, LoadedBeatmapSuccessfully: true, Alpha: 1 });
             AddStep($"{id}: begin playback", () =>
             {
