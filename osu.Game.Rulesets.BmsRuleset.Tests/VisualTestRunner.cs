@@ -21,6 +21,19 @@ public static class VisualTestRunner
     [STAThread]
     public static int Main(string[] args)
     {
+        if (args.FirstOrDefault() == "--session-memory-diagnostic")
+        {
+            var reportPath = Environment.GetEnvironmentVariable("BMS_SESSION_MEMORY_REPORT");
+            var manifestPath = Environment.GetEnvironmentVariable("BMS_SESSION_MEMORY_MANIFEST");
+            if (string.IsNullOrEmpty(reportPath) || string.IsNullOrEmpty(manifestPath))
+                throw new ArgumentException("Set BMS_SESSION_MEMORY_MANIFEST and BMS_SESSION_MEMORY_REPORT.");
+
+            using var sessionHost = Host.GetSuitableDesktopHost("bms-session-memory-diagnostic");
+            var game = new TestSceneBmsSessionMemory.DesktopRun(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(reportPath))!);
+            sessionHost.Run(game);
+            return game.ExitCode;
+        }
+
         if (args.FirstOrDefault() == "--gameplay-diagnostic")
         {
             var options = BmsGameplayDiagnosticOptions.Parse(args.Skip(1).ToArray());
