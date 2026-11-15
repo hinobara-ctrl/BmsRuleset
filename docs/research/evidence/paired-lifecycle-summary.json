@@ -1,0 +1,28 @@
+[
+  {
+    "Run": "session-inactive-original",
+    "Completed": 12,
+    "FirstBeforeMiB": 603.65,
+    "FirstStableMiB": 917.86,
+    "LastStableMiB": 2428.43,
+    "PeakSampledMiB": 2492.86,
+    "PostWarmSlopeMiBPerCycle": 101.57,
+    "EarlierPlayersAtLastStable": 12,
+    "PlayersAfterControlledGc": 12,
+    "DisplaysAfterControlledGc": 24,
+    "PrivateAfterControlledGcMiB": 2444.67
+  },
+  {
+    "Run": "session-inactive-fixed",
+    "Completed": 12,
+    "FirstBeforeMiB": 473.09,
+    "FirstStableMiB": 765.33,
+    "LastStableMiB": 1439.75,
+    "PeakSampledMiB": 1784.63,
+    "PostWarmSlopeMiBPerCycle": 26.15,
+    "EarlierPlayersAtLastStable": 1,
+    "PlayersAfterControlledGc": 0,
+    "DisplaysAfterControlledGc": 0,
+    "PrivateAfterControlledGcMiB": 1391.92
+  }
+]
